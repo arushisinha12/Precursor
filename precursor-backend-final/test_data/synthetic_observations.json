@@ -1,0 +1,317 @@
+[
+  {
+    "user_id": "user1",
+    "description": "Light near the staircase is flickering on and off.",
+    "photo_url": null,
+    "latitude": 12.935561235717234,
+    "longitude": 77.62425347845165,
+    "timestamp": "2026-08-21T19:51:25.200846",
+    "_category_hint": "lighting"
+  },
+  {
+    "user_id": "user8",
+    "description": "General clutter and disorganization near the notice board.",
+    "photo_url": null,
+    "latitude": 12.93510124479356,
+    "longitude": 77.6248396401174,
+    "timestamp": "2026-08-19T22:17:25.200229",
+    "_category_hint": "other"
+  },
+  {
+    "user_id": "user7",
+    "description": "Crack forming along the wall near the staircase.",
+    "photo_url": null,
+    "latitude": 12.936649795002396,
+    "longitude": 77.62438272173412,
+    "timestamp": "2026-08-21T21:18:25.200229",
+    "_category_hint": "structural"
+  },
+  {
+    "user_id": "user6",
+    "description": "Tap in the restroom won't stop running.",
+    "photo_url": null,
+    "latitude": 12.935762595847917,
+    "longitude": 77.62445818732407,
+    "timestamp": "2026-08-22T17:50:25.200229",
+    "_category_hint": "water"
+  },
+  {
+    "user_id": "user2",
+    "description": "Drain overflowing near the parking lot after rain.",
+    "photo_url": null,
+    "latitude": 12.934995112272793,
+    "longitude": 77.62455575951084,
+    "timestamp": "2026-08-21T06:35:25.200229",
+    "_category_hint": "overflow"
+  },
+  {
+    "user_id": "user8",
+    "description": "Outlet near the water fountain looks damaged.",
+    "photo_url": null,
+    "latitude": 12.936055774455077,
+    "longitude": 77.62335214922294,
+    "timestamp": "2026-08-21T14:45:25.200846",
+    "_category_hint": "electrical"
+  },
+  {
+    "user_id": "user5",
+    "description": "Spilled food not cleaned up near the vending machine.",
+    "photo_url": null,
+    "latitude": 12.936377962045881,
+    "longitude": 77.62335495691387,
+    "timestamp": "2026-08-18T21:06:25.200229",
+    "_category_hint": "cleanliness"
+  },
+  {
+    "user_id": "user4",
+    "description": "Corridor light has been out for two days now.",
+    "photo_url": null,
+    "latitude": 12.935645509139635,
+    "longitude": 77.62422131714773,
+    "timestamp": "2026-08-21T21:31:25.200846",
+    "_category_hint": "lighting"
+  },
+  {
+    "user_id": "user2",
+    "description": "Damp patch spreading on the hallway ceiling.",
+    "photo_url": null,
+    "latitude": 12.936640725219315,
+    "longitude": 77.62439529119219,
+    "timestamp": "2026-08-21T00:07:25.200229",
+    "_category_hint": "water"
+  },
+  {
+    "user_id": "user7",
+    "description": "Long queue spilling into the hallway, hard to walk through.",
+    "photo_url": null,
+    "latitude": 12.93434712264065,
+    "longitude": 77.62428794107923,
+    "timestamp": "2026-08-22T06:12:25.200229",
+    "_category_hint": "crowding"
+  },
+  {
+    "user_id": "user3",
+    "description": "Drain overflowing near the parking lot after rain.",
+    "photo_url": null,
+    "latitude": 12.93617190309218,
+    "longitude": 77.62569938301988,
+    "timestamp": "2026-08-21T18:47:25.200229",
+    "_category_hint": "overflow"
+  },
+  {
+    "user_id": "user5",
+    "description": "Very dim lighting near the entrance at night.",
+    "photo_url": null,
+    "latitude": 12.935329771994693,
+    "longitude": 77.62425195066487,
+    "timestamp": "2026-08-22T05:27:25.200846",
+    "_category_hint": "lighting"
+  },
+  {
+    "user_id": "user3",
+    "description": "Outlet near the water fountain looks damaged.",
+    "photo_url": null,
+    "latitude": 12.936277664302303,
+    "longitude": 77.6256628395783,
+    "timestamp": "2026-08-20T15:44:25.200229",
+    "_category_hint": "electrical"
+  },
+  {
+    "user_id": "user9",
+    "description": "Recycling bin outside is full and spilling over.",
+    "photo_url": null,
+    "latitude": 12.935972016214755,
+    "longitude": 77.62417306657112,
+    "timestamp": "2026-08-20T17:52:25.200229",
+    "_category_hint": "overflow"
+  },
+  {
+    "user_id": "user12",
+    "description": "Not sure what's wrong but this area smells odd.",
+    "photo_url": null,
+    "latitude": 12.935776709991291,
+    "longitude": 77.62474354834445,
+    "timestamp": "2026-08-21T17:13:25.200229",
+    "_category_hint": "other"
+  },
+  {
+    "user_id": "user6",
+    "description": "Long queue spilling into the hallway, hard to walk through.",
+    "photo_url": null,
+    "latitude": 12.936039668622314,
+    "longitude": 77.6247620129141,
+    "timestamp": "2026-08-22T03:51:25.200229",
+    "_category_hint": "crowding"
+  },
+  {
+    "user_id": "user8",
+    "description": "Path leading to the ramp is too narrow to pass through.",
+    "photo_url": null,
+    "latitude": 12.935554962847476,
+    "longitude": 77.62418009631364,
+    "timestamp": "2026-08-20T09:29:25.200229",
+    "_category_hint": "accessibility"
+  },
+  {
+    "user_id": "user1",
+    "description": "Path leading to the ramp is too narrow to pass through.",
+    "photo_url": null,
+    "latitude": 12.935392702166139,
+    "longitude": 77.62482401590067,
+    "timestamp": "2026-08-21T22:33:25.200229",
+    "_category_hint": "accessibility"
+  },
+  {
+    "user_id": "user3",
+    "description": "Exposed wiring hanging near the electrical panel.",
+    "photo_url": null,
+    "latitude": 12.934977327419057,
+    "longitude": 77.62416439454068,
+    "timestamp": "2026-08-22T15:08:25.200229",
+    "_category_hint": "electrical"
+  },
+  {
+    "user_id": "user8",
+    "description": "Extremely packed near the entrance during peak hours.",
+    "photo_url": null,
+    "latitude": 12.935602694050813,
+    "longitude": 77.62563880907071,
+    "timestamp": "2026-08-20T13:12:25.200229",
+    "_category_hint": "crowding"
+  },
+  {
+    "user_id": "user9",
+    "description": "Something looks a bit off near the parking area.",
+    "photo_url": null,
+    "latitude": 12.935562815954414,
+    "longitude": 77.62448672969,
+    "timestamp": "2026-08-21T11:28:25.200846",
+    "_category_hint": "other"
+  },
+  {
+    "user_id": "user11",
+    "description": "Stairwell lights go off randomly, hard to see steps.",
+    "photo_url": null,
+    "latitude": 12.935538490108964,
+    "longitude": 77.62345112149589,
+    "timestamp": "2026-08-19T16:50:25.200229",
+    "_category_hint": "lighting"
+  },
+  {
+    "user_id": "user3",
+    "description": "Extremely packed near the entrance during peak hours.",
+    "photo_url": null,
+    "latitude": 12.935906418759474,
+    "longitude": 77.62371579419867,
+    "timestamp": "2026-08-22T17:17:25.200229",
+    "_category_hint": "crowding"
+  },
+  {
+    "user_id": "user1",
+    "description": "Sink pipe under the counter is leaking.",
+    "photo_url": null,
+    "latitude": 12.935083882435428,
+    "longitude": 77.62447117951378,
+    "timestamp": "2026-08-19T00:34:25.200229",
+    "_category_hint": "plumbing"
+  },
+  {
+    "user_id": "user1",
+    "description": "Crack forming along the wall near the staircase.",
+    "photo_url": null,
+    "latitude": 12.935851097675418,
+    "longitude": 77.6250435107375,
+    "timestamp": "2026-08-21T11:35:25.200229",
+    "_category_hint": "structural"
+  },
+  {
+    "user_id": "user10",
+    "description": "Not sure what's wrong but this area smells odd.",
+    "photo_url": null,
+    "latitude": 12.93610242358883,
+    "longitude": 77.62512028604718,
+    "timestamp": "2026-08-21T23:17:25.200229",
+    "_category_hint": "other"
+  },
+  {
+    "user_id": "user3",
+    "description": "Litter scattered near the reading room entrance.",
+    "photo_url": null,
+    "latitude": 12.93520310975354,
+    "longitude": 77.62470213290887,
+    "timestamp": "2026-08-19T09:04:25.200229",
+    "_category_hint": "cleanliness"
+  },
+  {
+    "user_id": "user2",
+    "description": "No warning sign near the wet floor, someone almost slipped.",
+    "photo_url": null,
+    "latitude": 12.935617395274328,
+    "longitude": 77.62435093148895,
+    "timestamp": "2026-08-20T18:57:25.200229",
+    "_category_hint": "safety"
+  },
+  {
+    "user_id": "user14",
+    "description": "Massive crowd blocking the main corridor during lunch hour.",
+    "photo_url": null,
+    "latitude": 12.935665005140148,
+    "longitude": 77.62390613701699,
+    "timestamp": "2026-08-22T14:33:25.200229",
+    "_category_hint": "crowding"
+  },
+  {
+    "user_id": "user12",
+    "description": "Sink pipe under the counter is leaking.",
+    "photo_url": null,
+    "latitude": 12.936194015674872,
+    "longitude": 77.62378074702032,
+    "timestamp": "2026-08-21T23:06:25.200229",
+    "_category_hint": "plumbing"
+  },
+  {
+    "user_id": "user3",
+    "description": "Light near the staircase is flickering on and off.",
+    "photo_url": null,
+    "latitude": 12.935206224925132,
+    "longitude": 77.62404736695825,
+    "timestamp": "2026-08-22T16:06:25.200846",
+    "_category_hint": "lighting"
+  },
+  {
+    "user_id": "user7",
+    "description": "Not sure what's wrong but this area smells odd.",
+    "photo_url": null,
+    "latitude": 12.93500614110219,
+    "longitude": 77.62476770177076,
+    "timestamp": "2026-08-22T13:17:25.200229",
+    "_category_hint": "other"
+  },
+  {
+    "user_id": "user8",
+    "description": "Dust and clutter building up near the corridor.",
+    "photo_url": null,
+    "latitude": 12.936050209903222,
+    "longitude": 77.62386434034659,
+    "timestamp": "2026-08-21T22:35:25.200229",
+    "_category_hint": "cleanliness"
+  },
+  {
+    "user_id": "user2",
+    "description": "Stairwell lights go off randomly, hard to see steps.",
+    "photo_url": null,
+    "latitude": 12.93524802887086,
+    "longitude": 77.62442291037983,
+    "timestamp": "2026-08-22T13:50:25.200846",
+    "_category_hint": "lighting"
+  },
+  {
+    "user_id": "user1",
+    "description": "Printer in the library has been broken for days.",
+    "photo_url": null,
+    "latitude": 12.935297614361463,
+    "longitude": 77.62546159256618,
+    "timestamp": "2026-08-20T05:31:25.200229",
+    "_category_hint": "equipment"
+  }
+]
