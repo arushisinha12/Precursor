@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Precursor | See problems early</title>
+<meta name="description" content="Lightweight observations that surface emerging issues." />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+
+:root { --bg:#0b0d0e; --surface:#131617; --surface-2:#191c1d; --line:#2a2e2e; --muted:#939998; --text:#f4f5f2; --lime:#22e06a; --orange:#ffd400; --red:#ff2b2b; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; color:var(--text); background:var(--bg); font-family:"DM Sans",Arial,sans-serif; }
+button,textarea { font:inherit; }
+button { cursor:pointer; }
+svg { display:block; }
+
+.topbar { height:76px; display:flex; align-items:center; justify-content:space-between; max-width:1280px; margin:auto; padding:0 32px; border-bottom:1px solid var(--line); gap:16px; }
+.topbar-right { display:flex; align-items:center; gap:14px; }
+.view-toggle { display:flex; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:3px; gap:2px; }
+.view-toggle button { border:0; background:none; color:var(--muted); font-size:12px; font-weight:600; padding:7px 13px; border-radius:8px; }
+.view-toggle button.active { background:var(--lime); color:#0a1409; }
+.view-toggle button[disabled] { cursor:not-allowed; opacity:.55; }
+.view-toggle button[disabled]:hover { transform:none; filter:none; }
+.auth-status { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+.auth-status button { border:0; background:none; color:var(--lime); font-size:12px; padding:0; }
+.brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); font-family:Manrope,sans-serif; font-size:17px; font-weight:800; background:none; border:0; padding:0; }
+.brand small { display:block; margin-top:1px; color:var(--muted); font:500 10px "DM Sans",sans-serif; letter-spacing:.03em; }
+.brand-mark { display:grid; place-items:center; width:32px; height:32px; background:var(--lime); color:#15200a; border-radius:10px; }
+
+.button { display:inline-flex; gap:8px; justify-content:center; align-items:center; min-height:42px; border-radius:10px; padding:0 16px; border:1px solid transparent; color:var(--text); font-weight:600; transition:.2s; }
+.button--primary { background:var(--lime); color:#15200a; }
+.button--secondary { background:#191c1d; border-color:#343939; }
+.button--ghost { background:transparent; }
+.button:hover { transform:translateY(-1px); filter:brightness(1.08); }
+
+.hero { max-width:1280px; margin:0 auto; padding:76px 32px 48px; display:flex; justify-content:space-between; align-items:end; gap:32px; }
+.eyebrow { text-transform:uppercase; letter-spacing:.15em; font-size:11px; color:var(--muted); font-weight:700; display:flex; align-items:center; gap:8px; margin:0; }
+.eyebrow span { width:7px; height:7px; border-radius:99px; background:var(--lime); box-shadow:0 0 14px var(--lime); }
+.hero h1 { margin:13px 0 0; font:800 clamp(37px,5vw,68px)/1.07 Manrope,sans-serif; letter-spacing:-.055em; }
+.hero-copy { color:var(--muted); max-width:310px; line-height:1.65; margin:0 0 6px; }
+
+.map-shell { position:relative; max-width:1216px; height:min(62vw,570px); min-height:410px; margin:0 auto; overflow:hidden; border:1px solid #303536; border-radius:18px; background:#171a1a; }
+.leaflet-map { width:100%; height:100%; background:#171a1a; filter:grayscale(.82) brightness(.58) contrast(1.13); }
+.leaflet-control-zoom { border:1px solid #3a4040!important; box-shadow:none!important; }
+.leaflet-control-zoom a { background:#151818!important; color:#e9ece8!important; border-color:#363b3b!important; }
+.map-label,.map-hint,.map-legend { position:absolute; z-index:500; background:rgba(16,18,18,.91); border:1px solid #373c3c; backdrop-filter:blur(8px); border-radius:9px; color:#d9ddda; }
+.map-label { top:16px; left:16px; padding:9px 11px; display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; }
+.map-label svg { color:var(--lime); }
+.map-hint { bottom:17px; left:17px; padding:9px 11px; color:var(--muted); font-size:11px; }
+.map-legend { top:16px; right:16px; padding:9px 12px; display:flex; gap:12px; font-size:11px; }
+.map-legend span { display:flex; align-items:center; gap:5px; }
+.legend-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+.legend-dot--high,.status-dot--high { background:var(--red); }
+.legend-dot--emerging,.status-dot--rising { background:var(--orange); }
+.legend-dot--low,.status-dot--emerging { background:var(--lime); }
+.map-marker { width:36px; height:36px; display:grid; place-items:center; border-radius:50%; border:3px solid rgba(255,255,255,.9); color:#101212; font:700 12px "DM Sans",sans-serif; box-shadow:0 0 0 6px rgba(255,255,255,.14),0 4px 12px rgba(0,0,0,.5); }
+.map-marker--high { background:var(--red); box-shadow:0 0 0 6px rgba(255,255,255,.14),0 0 18px 3px var(--red),0 4px 12px rgba(0,0,0,.5); }
+.map-marker--emerging { background:var(--orange); box-shadow:0 0 0 6px rgba(255,255,255,.14),0 0 18px 3px var(--orange),0 4px 12px rgba(0,0,0,.5); }
+.map-marker--low { background:var(--lime); box-shadow:0 0 0 6px rgba(255,255,255,.14),0 0 18px 3px var(--lime),0 4px 12px rgba(0,0,0,.5); }
+.precursor-popup .leaflet-popup-content-wrapper { background:#151818; color:var(--text); border:1px solid #363a39; border-radius:12px; box-shadow:0 14px 35px rgba(0,0,0,.4); }
+.precursor-popup .leaflet-popup-tip { background:#151818; }
+.precursor-popup .leaflet-popup-content { margin:13px; width:210px!important; }
+.leaflet-popup-card { display:grid; gap:8px; }
+.leaflet-popup-card strong { font-size:13px; line-height:1.25; }
+.leaflet-popup-card span { font-size:11px; color:var(--muted); }
+.leaflet-popup-card b { color:#5a6160; }
+.leaflet-popup-card button { border:1px solid #3b4140; color:var(--text); background:#202424; border-radius:7px; padding:7px 8px; font-size:11px; font-weight:600; }
+
+.signal-summary { max-width:1216px; margin:22px auto 100px; padding:18px 0; display:flex; justify-content:space-between; color:var(--muted); }
+.signal-summary>div { display:flex; align-items:center; gap:10px; }
+.signal-summary svg { color:var(--orange); }
+.signal-summary strong,.signal-summary small { display:block; }
+.signal-summary strong { color:var(--text); font-size:14px; }
+.signal-summary small,.signal-summary p { font-size:12px; margin:2px 0 0; }
+
+.overlay { position:fixed; inset:0; z-index:1000; display:none; place-items:center; padding:20px; }
+.overlay:not([hidden]) { display:grid; }
+.overlay-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.66); backdrop-filter:blur(6px); }
+.alert-card,.form-sheet { z-index:1; width:min(100%,460px); background:#151818; border:1px solid #333838; border-radius:18px; box-shadow:0 26px 80px rgba(0,0,0,.55); max-height:90vh; overflow:auto; }
+.alert-card { padding:23px; }
+.alert-card__topline { color:var(--muted); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.09em; display:flex; align-items:center; gap:7px; }
+.status-dot { width:8px; height:8px; border-radius:50%; }
+.icon-button { margin-left:auto; color:var(--muted); background:none; border:0; padding:3px; display:grid; place-items:center; }
+.alert-card__heading { display:flex; align-items:flex-start; margin-top:15px; }
+.alert-card h2 { font:700 24px/1.18 Manrope,sans-serif; letter-spacing:-.04em; margin:0; text-transform:capitalize; }
+.alert-card__heading p { margin:9px 0 0; color:var(--orange); display:flex; gap:5px; align-items:center; font-size:12px; }
+.alert-card__metadata { color:var(--muted); font-size:13px; margin:9px 0 20px; }
+.alert-card__metadata span { color:#545a59; padding:0 4px; }
+.score-strip { display:flex; gap:8px; margin:0 0 18px; flex-wrap:wrap; }
+.score-chip { background:#1c2020; border:1px solid #333838; border-radius:9px; padding:8px 11px; }
+.score-chip small { display:block; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
+.score-chip strong { display:block; font-size:15px; margin-top:2px; font-family:Manrope,sans-serif; }
+.tag-row { display:flex; gap:6px; flex-wrap:wrap; margin:0 0 16px; }
+.tag-pill { background:#1c2020; border:1px solid #333838; border-radius:99px; padding:4px 10px; font-size:11px; color:var(--muted); text-transform:capitalize; }
+.evidence-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+.evidence-grid img { height:92px; width:100%; border-radius:8px; object-fit:cover; filter:saturate(.7); }
+.evidence-grid:has(img:only-child) { grid-template-columns:1fr; }
+.evidence-grid img:only-child { height:150px; }
+.alert-card__summary { margin:20px 0; padding:15px 0 0; border-top:1px solid var(--line); font-size:14px; line-height:1.5; }
+.alert-card .button { width:100%; }
+
+.form-sheet { position:relative; padding:25px; }
+.sheet-close { position:absolute; right:14px; top:10px; color:var(--muted); background:none; border:0; font-size:28px; line-height:1; }
+.report-form { display:grid; gap:13px; }
+.section-label { font:700 20px Manrope,sans-serif; margin-bottom:5px; }
+.photo-upload { height:150px; border:1px dashed #4a5150; border-radius:12px; background:#181b1b; color:var(--text); display:grid; place-items:center; width:100%; }
+.photo-upload span { display:grid; justify-items:center; gap:6px; }
+.photo-upload svg { color:var(--lime); }
+.photo-upload strong { font-size:14px; }
+.photo-upload small { color:var(--muted); font-size:11px; }
+.photo-preview { height:175px; position:relative; border-radius:12px; overflow:hidden; }
+.photo-preview img { width:100%; height:100%; object-fit:cover; }
+.photo-preview button { position:absolute; right:9px; top:9px; width:31px; height:31px; display:grid; place-items:center; border:0; border-radius:8px; background:rgba(10,10,10,.74); color:white; }
+.replace-photo { justify-self:start; border:0; background:none; color:var(--lime); padding:0; font-size:12px; display:flex; gap:5px; align-items:center; }
+.report-form textarea { resize:vertical; min-height:106px; padding:14px; border:1px solid #343938; border-radius:11px; color:var(--text); background:#101212; outline:none; width:100%; }
+.report-form textarea:focus { border-color:#77964a; }
+.form-meta { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; }
+.form-meta svg { color:#b6bdb9; }
+.form-meta button { color:var(--lime); background:none; border:0; padding:0; font-size:12px; }
+.form-error { margin:0; color:#ff8c8c; font-size:12px; }
+.form-success { margin:0; color:var(--lime); display:flex; align-items:center; gap:6px; font-size:12px; }
+.form-result { margin:0; padding:11px 13px; border-radius:10px; background:#1c2020; border:1px solid #333838; font-size:12px; color:var(--muted); display:grid; gap:6px; }
+.form-result strong { color:var(--text); }
+.organiser-panel,.complaint-panel { max-width:1216px; margin:20px auto 100px; }
+.panel-intro { margin:0 0 16px; }
+.panel-intro h2 { margin:0 0 7px; font:700 25px Manrope,sans-serif; letter-spacing:-.04em; }
+.panel-intro p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+.report-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; }
+.organiser-row { display:grid; gap:13px; background:var(--surface-2); border:1px solid var(--line); border-radius:14px; padding:17px; }
+.organiser-row.resolved { opacity:.52; }
+.report-topline,.report-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.organiser-title { font-weight:700; text-transform:capitalize; }
+.organiser-meta { color:var(--muted); font-size:12px; line-height:1.5; }
+.report-description { margin:0; color:#d9ddda; font-size:14px; line-height:1.5; }
+.report-photo { width:100%; height:150px; border-radius:10px; object-fit:cover; filter:saturate(.72); }
+.report-details { display:flex; flex-wrap:wrap; gap:6px; }
+.detail-chip { padding:5px 8px; background:#151818; border:1px solid #333838; border-radius:8px; color:var(--muted); font-size:11px; }
+.addressed-label { color:var(--lime); font-size:12px; font-weight:700; }
+.complaint-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.complaint-card { display:block; text-decoration:none; color:var(--text); background:var(--surface-2); border:1px solid var(--line); border-radius:13px; padding:15px; transition:.2s; }
+.complaint-card:hover { border-color:#4e5856; transform:translateY(-1px); }
+.complaint-card strong,.complaint-card small { display:block; }
+.complaint-card strong { font:700 18px Manrope,sans-serif; margin-bottom:4px; }
+.complaint-card small { color:var(--muted); font-size:12px; }
+.complaint-note { color:var(--muted); font-size:13px; line-height:1.55; margin:0 0 16px; max-width:720px; }
+
+.submit-button { margin-top:4px; width:100%; min-height:46px; }
+.submit-button[disabled] { opacity:.6; pointer-events:none; }
+
+.tag-select-row { display:flex; flex-wrap:wrap; gap:6px; }
+.tag-select { border:1px solid #343938; background:#101212; color:var(--muted); border-radius:99px; padding:6px 12px; font-size:11px; text-transform:capitalize; }
+.tag-select.selected { background:var(--lime); color:#0a1409; border-color:var(--lime); font-weight:600; }
+.field-label { font-size:12px; color:var(--muted); margin:2px 0 -4px; }
+
+.auth-tabs { display:flex; gap:4px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:3px; margin-bottom:16px; }
+.auth-tabs button { flex:1; border:0; background:none; color:var(--muted); font-size:13px; font-weight:600; padding:9px; border-radius:8px; }
+.auth-tabs button.active { background:var(--lime); color:#0a1409; }
+.auth-form { display:grid; gap:12px; }
+.auth-form input { padding:13px 14px; border:1px solid #343938; border-radius:11px; color:var(--text); background:#101212; outline:none; width:100%; }
+.auth-form input:focus { border-color:#77964a; }
+.auth-hint { font-size:11px; color:var(--muted); margin:-4px 0 0; }
+
+@media (max-width: 700px) {
+  .topbar { padding:0 17px; height:66px; }
+  .topbar .button { padding:0 11px; font-size:12px; }
+  .hero { padding:48px 18px 30px; display:block; }
+  .hero h1 { font-size:38px; }
+  .hero-copy { margin-top:20px; }
+  .map-shell { min-height:510px; height:65vh; border-radius:0; border-left:0; border-right:0; }
+  .map-legend { display:grid; gap:6px; top:auto; bottom:15px; right:15px; }
+  .map-hint { display:none; }
+  .signal-summary { padding:18px; display:block; margin:0 0 54px; }
+  .signal-summary p { margin-top:14px; }
+  .form-sheet { align-self:end; border-radius:18px 18px 0 0; padding:23px 18px; }
+  .overlay { padding:0; }
+  .alert-card { width:calc(100% - 28px); }
+  .map-label { top:13px; left:13px; }
+  .organiser-panel,.complaint-panel { margin:20px 18px 54px; }
+  .complaint-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#map">
+    <span class="brand-mark">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01"/><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"/><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"/><path d="M12 18h.01"/><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"/><circle cx="12" cy="12" r="2"/><path d="m13.41 10.59 5.66-5.66"/></svg>
+    </span>
+    <span>Precursor<small>Signals before incidents</small></span>
+  </a>
+  <div class="topbar-right">
+    <div class="auth-status" id="authStatus" hidden>
+      <span id="authStatusEmail"></span>
+      <button type="button" id="logoutBtn">Log out</button>
+    </div>
+    <div class="view-toggle">
+      <button type="button" class="active" id="userViewBtn">User</button>
+      <button type="button" id="organiserViewBtn">Organiser</button>
+    </div>
+    <button class="button button--secondary" id="openReportBtn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      Report an issue
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div>
+    <p class="eyebrow"><span></span> Signal map</p>
+    <h1>See small problems<br />before they become incidents.</h1>
+  </div>
+  <p class="hero-copy">Community observations reveal patterns early, so action can start before an issue escalates.</p>
+</section>
+
+<section id="map" class="map-shell">
+  <div id="leafletMap" class="leaflet-map" aria-label="Observation map"></div>
+  <div class="map-label">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.914 11.105A7.298 7.298 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738"/><circle cx="12" cy="10" r="3"/><path d="M16.8 21.2c.8-1 1.7-2.3 2.5-3.6"/><path d="m21 21-1.9-1.9"/></svg>
+    <span>Area overview</span>
+  </div>
+  <div class="map-legend" aria-label="Map status legend">
+    <span><i class="legend-dot legend-dot--high"></i> urgent</span>
+    <span><i class="legend-dot legend-dot--emerging"></i> emerging</span>
+    <span><i class="legend-dot legend-dot--low"></i> observation</span>
+  </div>
+  <div class="map-hint">Tap a signal to inspect it</div>
+</section>
+
+<section class="signal-summary">
+  <div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <span><strong id="alertCount">0 active patterns</strong><small>Across this area</small></span>
+  </div>
+  <p>Small reports gain meaning when they appear together.</p>
+</section>
+
+<section class="organiser-panel" id="organiserPanel" hidden></section>
+
+<section class="complaint-panel" id="complaintPanel">
+  <div class="panel-intro">
+    <h2>File an official complaint</h2>
+    <p>Precursor captures lightweight early observations. For a formal escalation, contact the relevant civic authority directly.</p>
+  </div>
+  <p class="complaint-note">For this prototype, official Greater Bengaluru civic contact options are listed below.</p>
+  <div class="complaint-grid" id="complaintContacts">
+    <!-- Keep all authority details together here so they are easy to update. -->
+    <a class="complaint-card" href="tel:1533"><strong>1533</strong><small>Helpline</small></a>
+    <a class="complaint-card" href="tel:9480685700"><strong>9480685700</strong><small>Sahaaya 2.0</small></a>
+    <a class="complaint-card" href="mailto:comm@bbmp.gov.in"><strong>comm@bbmp.gov.in</strong><small>Official email</small></a>
+    <a class="complaint-card" href="tel:08022660000"><strong>080-22660000</strong><small>Head office</small></a>
+    <a class="complaint-card" href="https://site.bbmp.gov.in/" target="_blank" rel="noopener noreferrer"><strong>Public grievance portal ↗</strong><small>Official civic website</small></a>
+  </div>
+</section>
+
+<!-- Alert / observation detail overlay -->
+<div class="overlay" id="alertOverlay" role="dialog" aria-modal="true" hidden>
+  <div class="overlay-backdrop" id="alertOverlayBackdrop"></div>
+  <article class="alert-card" id="alertCard"></article>
+</div>
+
+<!-- Report form overlay -->
+<div class="overlay" id="reportOverlay" role="dialog" aria-modal="true" hidden>
+  <div class="overlay-backdrop" id="reportOverlayBackdrop"></div>
+  <div class="form-sheet">
+    <button class="sheet-close" id="closeReportBtn" aria-label="Close report form">&times;</button>
+    <form class="report-form" id="reportForm">
+      <div class="section-label">New observation</div>
+      <input type="file" accept="image/*" id="photoInput" hidden />
+      <button type="button" class="photo-upload" id="photoUploadBtn">
+        <span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          <strong>Add photo</strong>
+          <small>Optional, but helpful</small>
+        </span>
+      </button>
+      <div class="photo-preview" id="photoPreview" hidden>
+        <img id="photoPreviewImg" alt="Selected observation" />
+        <button type="button" id="removePhotoBtn" aria-label="Remove photo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+      <button type="button" class="replace-photo" id="replacePhotoBtn" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        Replace photo
+      </button>
+      <textarea id="descriptionInput" placeholder="What did you notice?" aria-label="Observation description" maxlength="240"></textarea>
+      <div class="field-label">Tags (optional — AI will also suggest its own)</div>
+      <div class="tag-select-row" id="tagSelectRow"></div>
+      <div class="form-meta">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0"/><path d="m9 9 3 3"/></svg>
+        <span id="locationState">Locating you&hellip;</span>
+        <button type="button" id="retryLocationBtn" hidden>Retry</button>
+      </div>
+      <div class="form-meta">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2v4"/><path d="M8 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><circle cx="12" cy="16" r="2"/></svg>
+        <span>Just now</span>
+      </div>
+      <p class="form-error" id="formError" hidden></p>
+      <p class="form-success" id="formSuccess" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        Observation added to the map.
+      </p>
+      <div class="form-result" id="formResult" hidden></div>
+      <button type="submit" class="button button--primary submit-button" id="submitBtn">Submit observation</button>
+    </form>
+  </div>
+</div>
+
+<!-- Auth overlay - shown before reporting if not signed in -->
+<div class="overlay" id="authOverlay" role="dialog" aria-modal="true" hidden>
+  <div class="overlay-backdrop" id="authOverlayBackdrop"></div>
+  <div class="form-sheet">
+    <button class="sheet-close" id="closeAuthBtn" aria-label="Close sign in">&times;</button>
+    <div class="section-label">Sign in to report</div>
+    <div class="auth-tabs">
+      <button type="button" class="active" id="signinTabBtn">Sign in</button>
+      <button type="button" id="signupTabBtn">Sign up</button>
+    </div>
+    <form class="auth-form" id="authForm">
+      <input type="email" id="authEmail" placeholder="you@example.com" aria-label="Email" required />
+      <input type="password" id="authPassword" placeholder="Password" aria-label="Password" required minlength="6" />
+      <p class="auth-hint" id="authHint">At least 6 characters.</p>
+      <p class="form-error" id="authError" hidden></p>
+      <button type="submit" class="button button--primary submit-button" id="authSubmitBtn">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Same-origin API - this page is served by the same FastAPI process
+  // that exposes /observations, /clusters and /alerts.
+  const API_URL = "";
+  const DEFAULT_CENTER = [12.9351, 77.6054]; // area fallback
+
+  const KNOWN_CATEGORIES = ["lighting", "electrical", "water", "plumbing", "structural", "cleanliness", "overflow", "accessibility", "crowding", "equipment", "safety", "other"];
+
+  const AUTH_STORAGE_KEY = "precursor_auth";
+
+  // ---- state ----
+  let observations = [];
+  let alerts = [];
+  let clusters = [];
+  let currentView = "user";
+  let map, markerLayer;
+  let selectedLocation = null; // {latitude, longitude}
+  let photoData = null;
+  let selectedTags = [];
+  let authMode = "signin"; // or "signup"
+  let pendingReportAfterAuth = false;
+
+  // ---- helpers matching the original mapping logic (services/*.ts) ----
+  function toStatus(severity) {
+    if (severity == null) return "low";
+    if (severity >= 4) return "high";
+    if (severity === 3) return "emerging";
+    return "low";
+  }
+  function toCategory(tags) {
+    const match = (tags || []).find((t) => KNOWN_CATEGORIES.includes(t));
+    return match || "infrastructure";
+  }
+  function toTitle(description) {
+    return description.length > 46 ? description.slice(0, 43) + "\u2026" : description;
+  }
+  function mapObservation(item) {
+    return {
+      id: String(item.id),
+      latitude: item.latitude,
+      longitude: item.longitude,
+      title: toTitle(item.description),
+      description: item.description,
+      category: toCategory(item.tags),
+      tags: item.tags || [],
+      severity: item.severity ?? 1,
+      timestamp: item.timestamp,
+      status: toStatus(item.severity),
+      needsReview: !!item.needs_review,
+      clusterId: item.cluster_id,
+      reportCount: 1,
+      photoUrl: item.photo_url || undefined,
+    };
+  }
+  function toAlertStatus(status) {
+    if (status === "red") return "high";
+    if (status === "yellow") return "emerging";
+    return "rising";
+  }
+  function toDurationText(lastSeen) {
+    const hours = Math.round((Date.now() - new Date(lastSeen).getTime()) / 3600000);
+    if (hours < 1) return "Just now";
+    if (hours < 24) return `Active for ${hours}h`;
+    return `Active for ${Math.round(hours / 24)}d`;
+  }
+  function mapAlert(item) {
+    return {
+      id: String(item.cluster_id),
+      title: item.tags[0] ? `${item.tags[0]} issue` : "Emerging issue",
+      latitude: item.latitude,
+      longitude: item.longitude,
+      status: toAlertStatus(item.status),
+      durationText: toDurationText(item.last_seen),
+      reportCount: item.observation_count,
+      userCount: item.distinct_users,
+      photos: item.photos,
+      averageSeverity: item.average_severity,
+      emergenceScore: item.emergence_score,
+      rawStatus: item.status,
+      tags: item.tags,
+      summary: `${item.observation_count} report${item.observation_count === 1 ? "" : "s"} from ${item.distinct_users} ${item.distinct_users === 1 ? "person" : "people"}, average severity ${item.average_severity.toFixed(1)}.`,
+      category: item.tags[0] || "infrastructure",
+    };
+  }
+
+  // ---- auth ----
+  function getAuth() {
+    try {
+      const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+  function setAuth(auth) {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
+    renderAuthStatus();
+  }
+  function clearAuth() {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    renderAuthStatus();
+  }
+  function renderAuthStatus() {
+    const auth = getAuth();
+    const statusEl = document.getElementById("authStatus");
+    document.getElementById("authStatusEmail").textContent = auth ? auth.email : "";
+    statusEl.hidden = !auth;
+  }
+  async function authRequest(path, email, password) {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || "Something went wrong. Please try again.");
+    return data;
+  }
+
+  // ---- API calls ----
+  async function getObservations() {
+    const res = await fetch(`${API_URL}/observations/`);
+    if (!res.ok) throw new Error("Failed to load observations");
+    const data = await res.json();
+    return data.map(mapObservation);
+  }
+  async function getAlerts() {
+    const res = await fetch(`${API_URL}/alerts/`);
+    if (!res.ok) throw new Error("Failed to load alerts");
+    const data = await res.json();
+    return data.map(mapAlert);
+  }
+  async function getClusters() {
+    const res = await fetch(`${API_URL}/clusters/`);
+    if (!res.ok) throw new Error("Failed to load clusters");
+    return res.json();
+  }
+  async function submitObservation(input) {
+    const auth = getAuth();
+    const res = await fetch(`${API_URL}/observations/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(auth ? { Authorization: `Bearer ${auth.token}` } : {}),
+      },
+      body: JSON.stringify({
+        user_id: auth ? auth.email : "demo-user",
+        description: input.description,
+        photo_url: input.photoUrl || null,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        tags: input.tags || [],
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || "Failed to submit observation");
+    return mapObservation(data);
+  }
+
+  // ---- map ----
+  function initMap() {
+    map = L.map("leafletMap", { zoomControl: false }).setView(DEFAULT_CENTER, 16);
+    L.control.zoom({ position: "bottomright" }).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap",
+      maxZoom: 19,
+    }).addTo(map);
+    markerLayer = L.layerGroup().addTo(map);
+  }
+
+  function renderMarkers() {
+    markerLayer.clearLayers();
+    // Patterns are analytical signals. Their popup deliberately contains no
+    // contributing report details or reporter information.
+    clusters.forEach((cluster) => {
+      const status = cluster.status === "red" ? "high" : cluster.status === "yellow" ? "emerging" : "low";
+      const marker = L.marker([cluster.latitude, cluster.longitude], {
+        icon: L.divIcon({ className: "", html: `<span class="map-marker map-marker--${status}">${cluster.observation_count}</span>`, iconSize: [36, 36], iconAnchor: [18, 18] }),
+      });
+      marker.bindPopup(`<div class="leaflet-popup-card"><strong>Emerging pattern</strong><span>${cluster.observation_count} report${cluster.observation_count === 1 ? "" : "s"} <b>&middot;</b> ${cluster.status === "red" ? "urgent" : cluster.status === "yellow" ? "emerging" : "observed"}</span></div>`, { closeButton: false, offset: [0, -12], className: "precursor-popup" });
+      marker.on("click", () => showPatternDetails(cluster));
+      marker.addTo(markerLayer);
+    });
+    // Once an observation has joined a pattern, its cluster marker represents
+    // it on the map. This prevents an individual marker from covering the
+    // pattern/count marker at the same location.
+    observations.filter((obs) => !obs.clusterId).forEach((obs) => {
+      const marker = L.marker([obs.latitude, obs.longitude], {
+        icon: L.divIcon({
+          className: "",
+          html: `<span class="map-marker map-marker--${obs.status}">${obs.reportCount > 1 ? obs.reportCount : ""}</span>`,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+        }),
+      });
+      marker.bindPopup(
+        `<div class="leaflet-popup-card"><strong>Observation signal</strong><span>${obs.status === "emerging" ? "rising" : obs.status}</span></div>`,
+        { closeButton: false, offset: [0, -12], className: "precursor-popup" }
+      );
+      marker.on("popupopen", () => {
+        // Keep the brief popup open if the cursor moves down into it (e.g.
+        // to reach the "View details" button) instead of closing the
+        // instant the mouse leaves the marker itself.
+        const popupEl = marker.getPopup().getElement();
+        if (popupEl) {
+          popupEl.addEventListener("mouseenter", () => clearTimeout(marker._hoverCloseTimer));
+          popupEl.addEventListener("mouseleave", () => marker.closePopup());
+        }
+      });
+      // Hover shows the brief popup (desktop); clicking the marker itself
+      // jumps straight to the full story, since touch devices have no
+      // hover state to rely on.
+      marker.on("mouseover", () => {
+        clearTimeout(marker._hoverCloseTimer);
+        marker.openPopup();
+      });
+      marker.on("mouseout", () => {
+        marker._hoverCloseTimer = setTimeout(() => marker.closePopup(), 200);
+      });
+      marker.on("click", () => showObservationSignal(obs));
+      marker.addTo(markerLayer);
+    });
+  }
+
+  function flyTo(loc) {
+    if (map) map.flyTo([loc.latitude, loc.longitude], 18, { duration: 0.7 });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---- lightweight user-facing signal cards ----
+
+  function showObservationSignal(observation) {
+    renderAlertCard({
+      title: "Observation signal", latitude: observation.latitude, longitude: observation.longitude,
+      status: observation.status, durationText: "Reported recently", reportCount: 1, userCount: 1,
+      category: "signal", tags: observation.tags, averageSeverity: observation.severity,
+      emergenceScore: null, rawStatus: null, photos: [], summary: "A community observation has been recorded in this area.",
+    });
+    document.getElementById("alertOverlay").hidden = false;
+  }
+
+  function showPatternDetails(cluster) {
+    const status = cluster.status === "red" ? "high" : cluster.status === "yellow" ? "emerging" : "low";
+    renderAlertCard({
+      title: "Emerging pattern", latitude: cluster.latitude, longitude: cluster.longitude,
+      status, durationText: toDurationText(cluster.last_seen), reportCount: cluster.observation_count,
+      userCount: cluster.distinct_users, category: "pattern", tags: [], averageSeverity: cluster.average_severity,
+      emergenceScore: cluster.emergence_score, rawStatus: cluster.status, photos: [],
+      summary: "Multiple observations are forming a pattern in this area.",
+    });
+    document.getElementById("alertOverlay").hidden = false;
+  }
+
+  function renderAlertCard(alert) {
+    const card = document.getElementById("alertCard");
+    const photosHtml = (alert.photos || [])
+      .map((p, i) => `<img src="${p}" alt="Evidence ${i + 1} for ${escapeHtml(alert.title)}" />`)
+      .join("");
+    const tagsHtml = (alert.tags || [])
+      .map((t) => `<span class="tag-pill">${escapeHtml(t)}</span>`)
+      .join("");
+
+    const scoreChips = [];
+    scoreChips.push(`<div class="score-chip"><small>Avg severity</small><strong>${Number(alert.averageSeverity).toFixed(1)} / 5</strong></div>`);
+    if (alert.emergenceScore != null) {
+      scoreChips.push(`<div class="score-chip"><small>Emergence score</small><strong>${Number(alert.emergenceScore).toFixed(1)}</strong></div>`);
+    }
+    if (alert.rawStatus) {
+      scoreChips.push(`<div class="score-chip"><small>Status</small><strong style="text-transform:capitalize">${alert.rawStatus}</strong></div>`);
+    }
+
+    card.innerHTML = `
+      <div class="alert-card__topline">
+        <span class="status-dot status-dot--${alert.status}"></span>
+        <span>${escapeHtml(alert.category)} alert</span>
+        <button class="icon-button" id="closeAlertBtn" aria-label="Close alert">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="alert-card__heading">
+        <div>
+          <h2>${escapeHtml(alert.title)}</h2>
+          <p>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            ${escapeHtml(alert.durationText)}
+          </p>
+        </div>
+      </div>
+      <p class="alert-card__metadata">${alert.reportCount} reports <span>&middot;</span> ${alert.userCount} users</p>
+      <div class="score-strip">${scoreChips.join("")}</div>
+      ${tagsHtml ? `<div class="tag-row">${tagsHtml}</div>` : ""}
+      ${photosHtml ? `<div class="evidence-grid">${photosHtml}</div>` : ""}
+      <div class="alert-card__summary">${escapeHtml(alert.summary)}</div>
+      <button class="button button--secondary" id="locateBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4"/><path d="M6 12H2"/><path d="M12 6V2"/><path d="M12 22v-4"/><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/></svg>
+        Locate on map
+      </button>
+    `;
+    document.getElementById("closeAlertBtn").addEventListener("click", closeAlertOverlay);
+    document.getElementById("locateBtn").addEventListener("click", () => {
+      flyTo(alert);
+      closeAlertOverlay();
+      document.getElementById("map").scrollIntoView({ behavior: "smooth" });
+    });
+  }
+
+  function closeAlertOverlay() {
+    document.getElementById("alertOverlay").hidden = true;
+  }
+
+  // ---- summary ----
+  function renderSummary() {
+    document.getElementById("alertCount").textContent = `${alerts.length} active pattern${alerts.length === 1 ? "" : "s"}`;
+  }
+
+  // ---- load ----
+  async function loadAll() {
+    try {
+      const [obs, al, allClusters] = await Promise.all([getObservations(), getAlerts(), getClusters()]);
+      observations = obs;
+      alerts = al;
+      clusters = allClusters;
+      renderMarkers();
+      renderSummary();
+    } catch (err) {
+      console.error("Failed to load initial data \u2014 is the backend running?", err);
+    }
+  }
+
+  // ---- report form ----
+  let locationDetected = null;
+
+  function requestLocation() {
+    const stateEl = document.getElementById("locationState");
+    const retryBtn = document.getElementById("retryLocationBtn");
+    if (!navigator.geolocation) {
+      stateEl.textContent = "Location unavailable \u2014 using area center";
+      retryBtn.hidden = false;
+      return;
+    }
+    stateEl.textContent = "Locating you\u2026";
+    retryBtn.hidden = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        locationDetected = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        stateEl.textContent = "Location detected";
+        retryBtn.hidden = true;
+      },
+      () => {
+        stateEl.textContent = "Location unavailable \u2014 using area center";
+        retryBtn.hidden = false;
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }
+
+  function selectPhoto(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        photoData = reader.result;
+        document.getElementById("photoPreviewImg").src = reader.result;
+        document.getElementById("photoPreview").hidden = false;
+        document.getElementById("photoUploadBtn").hidden = true;
+        document.getElementById("replacePhotoBtn").hidden = false;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearPhoto() {
+    photoData = null;
+    document.getElementById("photoInput").value = "";
+    document.getElementById("photoPreview").hidden = true;
+    document.getElementById("photoUploadBtn").hidden = false;
+    document.getElementById("replacePhotoBtn").hidden = true;
+  }
+
+  function resetForm() {
+    document.getElementById("descriptionInput").value = "";
+    clearPhoto();
+    selectedTags = [];
+    renderTagOptions();
+    document.getElementById("formError").hidden = true;
+    document.getElementById("formSuccess").hidden = true;
+    document.getElementById("formResult").hidden = true;
+  }
+
+  function renderTagOptions() {
+    const row = document.getElementById("tagSelectRow");
+    row.innerHTML = KNOWN_CATEGORIES.map(
+      (tag) => `<button type="button" class="tag-select${selectedTags.includes(tag) ? " selected" : ""}" data-tag="${tag}">${escapeHtml(tag)}</button>`
+    ).join("");
+    row.querySelectorAll(".tag-select").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tag = btn.dataset.tag;
+        selectedTags = selectedTags.includes(tag) ? selectedTags.filter((t) => t !== tag) : [...selectedTags, tag];
+        renderTagOptions();
+      });
+    });
+  }
+
+  function openReport() {
+    if (currentView !== "user") return;
+    if (!getAuth()) {
+      pendingReportAfterAuth = true;
+      openAuth();
+      return;
+    }
+    document.getElementById("reportOverlay").hidden = false;
+    renderTagOptions();
+    requestLocation();
+  }
+  function closeReport() {
+    document.getElementById("reportOverlay").hidden = true;
+  }
+
+  // ---- auth overlay ----
+  function setAuthMode(mode) {
+    authMode = mode;
+    document.getElementById("signinTabBtn").classList.toggle("active", mode === "signin");
+    document.getElementById("signupTabBtn").classList.toggle("active", mode === "signup");
+    document.getElementById("authSubmitBtn").textContent = mode === "signin" ? "Sign in" : "Sign up";
+    document.getElementById("authHint").textContent = mode === "signup" ? "At least 6 characters." : "";
+    document.getElementById("authError").hidden = true;
+  }
+  function openAuth() {
+    document.getElementById("authOverlay").hidden = false;
+    setAuthMode("signin");
+    document.getElementById("authEmail").value = "";
+    document.getElementById("authPassword").value = "";
+  }
+  function closeAuth() {
+    document.getElementById("authOverlay").hidden = true;
+    pendingReportAfterAuth = false;
+  }
+  async function handleAuthSubmit(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById("authError");
+    const submitBtn = document.getElementById("authSubmitBtn");
+    errorEl.hidden = true;
+
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+
+    submitBtn.disabled = true;
+    try {
+      const path = authMode === "signin" ? "/auth/login" : "/auth/signup";
+      const result = await authRequest(path, email, password);
+      setAuth(result);
+      closeAuth();
+      if (pendingReportAfterAuth) {
+        pendingReportAfterAuth = false;
+        openReport();
+      }
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  const SEVERITY_LABEL = { 1: "very minor", 2: "minor", 3: "moderate", 4: "serious", 5: "critical / immediate hazard" };
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById("formError");
+    const successEl = document.getElementById("formSuccess");
+    const resultEl = document.getElementById("formResult");
+    const submitBtn = document.getElementById("submitBtn");
+    errorEl.hidden = true;
+    successEl.hidden = true;
+    resultEl.hidden = true;
+
+    if (currentView !== "user") {
+      errorEl.textContent = "Reporting is available in User view only.";
+      errorEl.hidden = false;
+      return;
+    }
+
+    const description = document.getElementById("descriptionInput").value.trim();
+    if (description.length < 4) {
+      errorEl.textContent = "Add a short description of what you noticed.";
+      errorEl.hidden = false;
+      return;
+    }
+
+    const latitude = locationDetected ? locationDetected.latitude : DEFAULT_CENTER[0];
+    const longitude = locationDetected ? locationDetected.longitude : DEFAULT_CENTER[1];
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Analyzing & submitting\u2026";
+    try {
+      const created = await submitObservation({ description, latitude, longitude, photoUrl: photoData || undefined, tags: selectedTags });
+      observations = [created, ...observations];
+      renderMarkers();
+      flyTo(created);
+
+      // Surface exactly what the backend's AI/scoring pipeline produced,
+      // per ai_core/schema.py + services/scoring.py.
+      const severityLabel = SEVERITY_LABEL[created.severity] || "";
+      resultEl.innerHTML = `
+        <div><strong>Severity: ${created.severity} / 5</strong> \u2014 ${escapeHtml(severityLabel)}</div>
+        <div>Tags: ${(created.tags || []).map(escapeHtml).join(", ") || "none"}</div>
+        ${created.needsReview ? `<div>\u26a0\ufe0f Flagged for human review (AI analysis fell back).</div>` : ""}
+      `;
+      resultEl.hidden = false;
+      successEl.hidden = false;
+      document.getElementById("descriptionInput").value = "";
+      clearPhoto();
+      selectedTags = [];
+      renderTagOptions();
+
+      // Refresh alerts too, since this new observation may have joined or
+      // formed a cluster (services/clustering.py + scoring.py run server-side
+      // on every POST /observations/).
+      alerts = await getAlerts();
+      clusters = await getClusters();
+      renderMarkers();
+      renderSummary();
+    } catch (err) {
+      console.error("Failed to submit observation", err);
+      errorEl.textContent = err.message || "Something went wrong submitting this observation. Is the backend running?";
+      errorEl.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit observation";
+    }
+  }
+
+  // ---- wire up ----
+  document.addEventListener("DOMContentLoaded", () => {
+    initMap();
+    loadAll();
+    renderAuthStatus();
+
+    document.getElementById("openReportBtn").addEventListener("click", openReport);
+    document.getElementById("closeReportBtn").addEventListener("click", closeReport);
+    document.getElementById("reportOverlayBackdrop").addEventListener("click", closeReport);
+    document.getElementById("alertOverlayBackdrop").addEventListener("click", closeAlertOverlay);
+
+    document.getElementById("photoUploadBtn").addEventListener("click", () => document.getElementById("photoInput").click());
+    document.getElementById("replacePhotoBtn").addEventListener("click", () => document.getElementById("photoInput").click());
+    document.getElementById("photoInput").addEventListener("change", (e) => selectPhoto(e.target.files[0]));
+    document.getElementById("removePhotoBtn").addEventListener("click", clearPhoto);
+    document.getElementById("retryLocationBtn").addEventListener("click", requestLocation);
+
+    document.getElementById("reportForm").addEventListener("submit", handleSubmit);
+
+    // Auth overlay
+    document.getElementById("closeAuthBtn").addEventListener("click", closeAuth);
+    document.getElementById("authOverlayBackdrop").addEventListener("click", closeAuth);
+    document.getElementById("signinTabBtn").addEventListener("click", () => setAuthMode("signin"));
+    document.getElementById("signupTabBtn").addEventListener("click", () => setAuthMode("signup"));
+    document.getElementById("authForm").addEventListener("submit", handleAuthSubmit);
+    document.getElementById("logoutBtn").addEventListener("click", clearAuth);
+
+    document.getElementById("organiserViewBtn").addEventListener("click", () => setView("organiser"));
+    document.getElementById("userViewBtn").addEventListener("click", () => setView("user"));
+  });
+
+  // ---- organiser view ----
+  function setView(view) {
+    currentView = view;
+    document.getElementById("userViewBtn").classList.toggle("active", view === "user");
+    document.getElementById("organiserViewBtn").classList.toggle("active", view === "organiser");
+    document.getElementById("openReportBtn").hidden = view === "organiser";
+    document.getElementById("organiserPanel").hidden = view !== "organiser";
+    document.getElementById("complaintPanel").hidden = view === "organiser";
+    if (view === "organiser") closeReport();
+    if (view === "organiser") loadOrganiserList();
+  }
+
+  async function loadOrganiserList() {
+    const panel = document.getElementById("organiserPanel");
+    panel.innerHTML = `<p style="color:var(--muted);font-size:13px;">Loading...</p>`;
+    try {
+      const res = await fetch(`${API_URL}/observations/organiser`);
+      if (!res.ok) throw new Error("Failed to load reports");
+      const items = await res.json();
+      if (!items.length) {
+        panel.innerHTML = `<div class="panel-intro"><h2>Individual reports</h2><p>Review each user's observation separately. Addressing one report does not close the entire pattern.</p></div><p style="color:var(--muted);font-size:13px;">No reports yet.</p>`;
+        return;
+      }
+      panel.innerHTML = `<div class="panel-intro"><h2>Individual reports</h2><p>Review each user's observation separately. Addressing one report does not close the entire pattern.</p></div><div class="report-list">${items.map((report) => `
+        <article class="organiser-row${report.resolved ? " resolved" : ""}" data-observation-id="${report.id}">
+          <div class="report-topline"><span class="organiser-title">${escapeHtml(report.tags?.[0] || "Unlabeled")} observation</span><span class="organiser-meta">${escapeHtml(report.user_id)}</span></div>
+          <p class="report-description">“${escapeHtml(report.description)}”</p>
+          ${report.photo_url ? `<img class="report-photo" src="${escapeHtml(report.photo_url)}" alt="Submitted report evidence" />` : ""}
+          <div class="report-details">
+            <span class="detail-chip">Severity ${report.severity ?? "—"} / 5</span>
+            <span class="detail-chip">${report.needs_review ? "AI review needed" : "AI reviewed"}</span>
+            <span class="detail-chip">Pattern ${report.cluster_id ? "#" + report.cluster_id : "not yet assigned"}</span>
+            <span class="detail-chip">${new Date(report.timestamp).toLocaleString()}</span>
+            <span class="detail-chip">${Number(report.latitude).toFixed(4)}, ${Number(report.longitude).toFixed(4)}</span>
+            ${(report.tags || []).map((tag) => `<span class="detail-chip">${escapeHtml(tag)}</span>`).join("")}
+          </div>
+          <div class="report-footer"><span class="organiser-meta">${report.resolved ? "This individual report has been addressed." : "Unaddressed"}</span>${report.resolved ? `<span class="addressed-label">Addressed</span>` : `<button class="button button--secondary" data-resolve-id="${report.id}">Mark addressed</button>`}</div>
+        </article>
+      `).join("")}</div>`;
+      panel.querySelectorAll("[data-resolve-id]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.resolveId;
+          btn.disabled = true;
+          try {
+            const response = await fetch(`${API_URL}/observations/${id}/resolve`, { method: "PATCH" });
+            if (!response.ok) throw new Error("Failed to address report");
+            loadOrganiserList();
+          } catch (err) {
+            console.error("Failed to resolve", err);
+            btn.disabled = false;
+          }
+        });
+      });
+    } catch (err) {
+      panel.innerHTML = `<p style="color:var(--muted);font-size:13px;">Failed to load individual reports.</p>`;
+    }
+  }
+})();
+</script>
+</body>
+</html>
