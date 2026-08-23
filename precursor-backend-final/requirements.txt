@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-sqlalchemy
-pydantic
-python-dotenv
-google-generativeai
-pillow
-requests
