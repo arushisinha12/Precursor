@@ -1,374 +1,87 @@
-# 🔺 Precursor — Signals Before Incidents
-
-> **Small reports gain meaning when they appear together.**
-
-Precursor is an early-warning system that detects **emerging issues in physical spaces** by combining small observations from multiple users.
-
-Instead of waiting for a major incident or formal complaint, Precursor looks for patterns across **location, issue type, severity, number of independent users, and recency** to identify problems while they are still emerging.
-
----
-
-## 🚨 Problem Statement
-
-Many physical-world problems begin as small, isolated signals:
-
-* A flickering light
-* A water leak
-* An overflowing bin
-* A damaged staircase
-* Increasing crowding
-* A minor safety hazard
-
-Individually, these observations may not appear urgent. However, when similar observations start appearing from multiple people in the same area, they can indicate a developing problem.
-
-Traditional reporting systems generally react **after an incident is recognized**.
-
-**Precursor aims to detect the pattern before the incident.**
-
----
-
-## 💡 Solution
-
-Precursor allows users to submit lightweight observations containing:
-
-* 📝 Description
-* 📷 Optional photo
-* 📍 Location
-* 👤 User ID
-
-The system then:
-
-1. Receives the observation through **FastAPI**
-2. Uses **Gemini's multimodal AI** to identify issue tags and severity
-3. Stores the observation in **PostgreSQL**
-4. Groups related observations using issue similarity and geographic proximity
-5. Calculates an **Emergence Score**
-6. Generates alerts when a cluster crosses a defined threshold
-7. Displays observations and alerts through the dashboard
-
-### Core Flow
-
-```text
-User Observation
-      ↓
-    FastAPI
-      ↓
-  Gemini AI
-      ↓
-Tags + Severity
-      ↓
- PostgreSQL
-      ↓
-   Clustering
-      ↓
- Emergence Score
-      ↓
- Green / Yellow / Red
-      ↓
-     Alert
-```
-
----
-
-## ✨ Features
-
-### 👤 User Reporting
-
-* Submit observations with text
-* Upload optional images
-* Provide geographic coordinates
-* Optionally select issue categories
-
-### 🤖 AI Analysis
-
-Gemini analyzes the observation and extracts:
-
-* Issue categories
-* Severity score from 1–5
-
-Supported categories include:
-
-`lighting` · `electrical` · `water` · `plumbing` · `structural` · `cleanliness` · `overflow` · `accessibility` · `crowding` · `equipment` · `safety` · `other`
-
-### 📍 Spatial & Issue Clustering
-
-Related observations are grouped based on:
-
-* Similar issue tags
-* Geographic proximity
-
-The current prototype uses a **100-meter proximity threshold**.
-
-### 📊 Emergence Scoring
-
-The system calculates:
-
-```text
-Emergence Score =
-Observation Count
-× Distinct Users
-× Average Severity
-× Recency Factor
-```
-
-This allows recent, repeated reports from independent users to gain more importance.
-
-### 🚨 Alerts
-
-Clusters are classified as:
-
-| Score   | Status    |
-| ------- | --------- |
-| `< 20`  | 🟢 Green  |
-| `20–50` | 🟡 Yellow |
-| `> 50`  | 🔴 Red    |
-
-### 🏢 Organization Dashboard
-
-Organizations can:
-
-* View reported issues
-* Sort issues by severity
-* Filter observations requiring review
-* Review/update observations
-* View active alerts
-
----
-
-## 🧠 Role of AI
-
-Gemini is **not responsible for deciding the final alert**.
-
-Its role is to convert unstructured user input into structured information:
-
-```text
-Text + Image
-     ↓
- Gemini
-     ↓
-Issue Tags + Severity
-```
-
-The backend then uses those signals for clustering and emergence detection.
-
-This keeps the final alert logic **transparent and explainable**.
-
----
-
-## 🏗️ Architecture
-
-```text
-                  ┌──────────────┐
-                  │    User      │
-                  └──────┬───────┘
-                         │
-                  Observation
-                  Text / Photo / GPS
-                         │
-                         ▼
-                  ┌──────────────┐
-                  │   FastAPI    │
-                  │  REST API    │
-                  └──────┬───────┘
-                         │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-       ┌─────────────┐       ┌─────────────┐
-       │ Gemini API  │       │ PostgreSQL  │
-       │ AI Analysis │       │  Database   │
-       └──────┬──────┘       └──────┬──────┘
-              │                     │
-              └──────────┬──────────┘
-                         ▼
-                  ┌──────────────┐
-                  │  Clustering  │
-                  └──────┬───────┘
-                         ▼
-                  ┌──────────────┐
-                  │   Scoring    │
-                  └──────┬───────┘
-                         ▼
-                  ┌──────────────┐
-                  │    Alerts    │
-                  └──────┬───────┘
-                         ▼
-                  ┌──────────────┐
-                  │  Dashboard   │
-                  └──────────────┘
-```
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend / Dashboard
-
-* Python
-* Streamlit
-* Folium
-* Pandas
-
-### Backend
-
-* Python
-* FastAPI
-* REST APIs
-
-### AI / ML
-
-* Gemini API
-* Multimodal text + image analysis
-* Rule-based spatial clustering
-* Emergence scoring
-
-### Database
-
-* PostgreSQL
-* SQLAlchemy
-
-### Data
-
-* Synthetic observations for prototype demonstration
-
----
-
-## 🔌 API Endpoints
-
-### Observations
-
-```http
-POST /observations/
-```
-
-Submit a new observation for analysis.
-
-```http
-GET /observations/
-```
-
-Retrieve reported observations.
-
-```http
-PATCH /observations/{id}
-```
-
-Update review status for an observation.
-
-### Clusters
-
-```http
-GET /clusters/
-```
-
-Retrieve detected issue clusters.
-
-### Alerts
-
-```http
-GET /alerts/
-```
-
-Retrieve active emerging-issue alerts.
-
----
-
-## ⚙️ Setup
-
-### 1. Clone the repository
+# Precursor — single-app prototype
+
+Detect problems before they become incidents. This is the whole app —
+frontend + backend + AI tagging + clustering/scoring — merged into **one**
+FastAPI process, so there's one thing to install and one thing to run.
+
+The backend logic (models, scoring, clustering, AI tagging fallback) is
+unchanged from the original prototype. The only thing that changed is how
+the frontend is served: instead of a separate Next.js dev server, the same
+visual design (dark theme, live map, report form, alert cards) is now a
+single static page (`static/index.html`) served directly by FastAPI, so you
+don't need Node/npm at all — just Python.
+
+## Run it
 
 ```bash
-git clone <repository-url>
 cd precursor
-```
-
-### 2. Create a virtual environment
-
-```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-On Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-### 3. Install dependencies
-
-```bash
+python3 -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-### 4. Configure environment variables
-
-Create a `.env` file and provide the required database and Gemini API configuration.
-
-Example:
-
-```env
-DATABASE_URL=<your-postgresql-url>
-GEMINI_API_KEY=<your-gemini-api-key>
-```
-
-**Do not commit API keys or `.env` files to GitHub.**
-
-### 5. Start the backend
-
-```bash
 uvicorn main:app --reload
 ```
 
-The API will run on:
+Then open **http://localhost:8000** in your browser. That's it — the API
+and the frontend are the same server on the same port.
 
-```text
-http://localhost:8000
-```
+## What you can do
 
-### 6. Start the dashboard
+- **Report an observation**: click "Report observation", optionally add a
+  photo, write what you noticed, allow location access (or it falls back to
+  an area-center default), submit.
+- The backend immediately runs it through the AI tagging/severity pipeline
+  (`ai_core/observation_analyzer.py`) and the response is shown right in the
+  form: assigned **tags** and a **severity score (1–5)**.
+- It also runs clustering (`services/clustering.py`): if this observation is
+  near others sharing a tag (within 100m), they're grouped into a cluster,
+  and an **emergence score** is computed (`services/scoring.py`) from report
+  count × distinct users × average severity × recency. Clusters scoring
+  above the threshold turn into map alerts.
+- Click any marker on the map to see its details — severity, average
+  severity for its cluster, emergence score, status (green/yellow/red →
+  observation/emerging/urgent), tags, and photos.
+
+## AI tagging: works with no API key
+
+By default there's no `GEMINI_API_KEY` set, so tagging/severity uses a
+built-in offline keyword-based analyzer (see
+`ai_core/observation_analyzer.py`) — the app is fully functional out of the
+box with zero configuration.
+
+To use real Gemini-based analysis instead:
 
 ```bash
-streamlit run app.py
+cp .env.example .env
+# then edit .env and set GEMINI_API_KEY=your-key-here
+# (get a free key at https://aistudio.google.com/app/apikey)
 ```
 
-The dashboard will connect to the FastAPI backend running on port `8000`.
+## Data storage
 
----
+Defaults to a local SQLite file (`precursor.db`, created automatically on
+first run). To use Postgres instead, set `DATABASE_URL` in `.env` and
+`pip install psycopg2-binary`.
 
-## 🧪 Prototype Data
+## Project structure
 
-The prototype can use synthetic observations to demonstrate the complete pipeline.
-
-Synthetic data includes:
-
-* Multiple users
-* Different issue types
-* Geographic locations
-* Different severity levels
-* Recent observations
-* Deliberately generated clusters
-
-The synthetic observations are submitted through the **same API used by the application**, allowing the complete analysis → clustering → alert pipeline to be demonstrated.
-
----
-
-## 🔮 Future Improvements
-
-* Real-time location detection
-* Authentication and user verification
-* Anti-spam and duplicate-report detection
-* Asynchronous AI processing
-* Scalable spatial indexing
-* Improved semantic clustering
-* Historical trend analysis
-* Human verification workflows
-* Integration with maintenance/incident-response systems
-* Calibration using real-world datasets
-
----
-
-## 🎯 Key Idea
-
-> **Precursor doesn't wait for an incident to become obvious. It looks for the signals that appear before it.**
-
-**Observe → Understand → Cluster → Score → Alert**
+```
+precursor/
+├── main.py                       # FastAPI app: mounts API routes + serves static/index.html
+├── database.py                   # SQLAlchemy engine/session (SQLite by default)
+├── models.py                     # Observation, Cluster tables
+├── schemas.py                    # Pydantic request/response models
+├── ai_config.py                  # Gemini key / offline-fallback switch
+├── ai_core/
+│   ├── schema.py                 # Fixed tag list + severity scale (AI/backend contract)
+│   └── observation_analyzer.py   # Gemini analysis + offline keyword fallback
+├── services/
+│   ├── clustering.py             # Groups nearby same-tag observations into clusters
+│   └── scoring.py                # Emergence score + green/yellow/red status
+├── routes/
+│   ├── observations.py           # POST/GET /observations
+│   ├── clusters.py                # GET /clusters
+│   └── alerts.py                  # GET /alerts (red clusters, with rolled-up tags/photos)
+├── static/
+│   └── index.html                # The entire frontend (HTML+CSS+JS), same design as before
+└── requirements.txt
+```
